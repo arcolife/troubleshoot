@@ -102,9 +102,9 @@ require (
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29 // indirect
 	golang.org/x/mod v0.10.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
-	sigs.k8s.io/e2e-framework v0.2.0 // indirect
 	k8s.io/component-base v0.27.4 // indirect
 	k8s.io/kubectl v0.27.3 // indirect
+	sigs.k8s.io/e2e-framework v0.2.0 // indirect
 )
 
 require (
@@ -117,6 +117,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/Microsoft/hcsshim v0.10.0-rc.7 // indirect
 	github.com/andybalholm/brotli v1.0.1 // indirect
+	github.com/antonholmquist/jason v1.0.0
 	github.com/aws/aws-sdk-go v1.44.122 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
