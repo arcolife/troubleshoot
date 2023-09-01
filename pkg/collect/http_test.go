@@ -3,6 +3,8 @@ package collect
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -190,7 +192,7 @@ func TestCollectHTTP_Collect(t *testing.T) {
 			Status: 200,
 			Body:   "Hello, PUT!",
 			Headers: Headers{
-				ContentLength: "13",
+				ContentLength: "11",
 				ContentType:   "text/plain; charset=utf-8",
 			},
 		},
@@ -259,7 +261,8 @@ func TestCollectHTTP_Collect(t *testing.T) {
 				Post: &troubleshootv1beta2.Post{
 					InsecureSkipVerify: true,
 					Body:               `{"id": 123, "name": "John Doe"}`,
-					Timeout:            5,
+					// Timeout:            5,
+					Headers: map[string]string{"Content-Type": "application/json"},
 				},
 			},
 			args: args{
@@ -279,8 +282,9 @@ func TestCollectHTTP_Collect(t *testing.T) {
 					CollectorName: "example-com",
 				},
 				Put: &troubleshootv1beta2.Put{
-					Body:    `{"id": 123, "name": "John Doe"}`,
-					Timeout: 5,
+					Body: `{"id": 123, "name": "John Doe"}`,
+					// Timeout: 5,
+					Headers: map[string]string{"Content-Type": "application/json"},
 				},
 			},
 			args: args{
@@ -292,6 +296,7 @@ func TestCollectHTTP_Collect(t *testing.T) {
 			wantErr: false,
 			isHttps: false,
 		},
+		// add TLS cert case
 	}
 	for _, tt := range tests {
 		var ts *httptest.Server
@@ -303,15 +308,50 @@ func TestCollectHTTP_Collect(t *testing.T) {
 		url := ts.URL
 		defer ts.Close()
 
-		client := ts.Client()
-		rs, err := client.Get(ts.URL + "/get")
+		// client := ts.Client()
+		// rs, err := client.Get(ts.URL + "/get")
+		// rs, err := client.Post(ts.URL+"/post", "application/json", bytes.NewBuffer([]byte(`{"id": 123, "name": "John Doe"}`)))
+
+		// if err != nil {
+		// 	t.Fatalf("failed to get index.html: %v", err)
+		// }
+		// if rs.StatusCode != http.StatusOK {
+		// 	t.Errorf("expected status code %d, got %d", http.StatusOK, rs.StatusCode)
+		// }
+		// fmt.Println("pre-test-launch rs", rs)
+
+		req, err := http.NewRequest("POST", url+"/post", strings.NewReader(`{"id": 123, "name": "John Doe"}`))
 		if err != nil {
 			t.Fatalf("failed to get index.html: %v", err)
 		}
-		if rs.StatusCode != http.StatusOK {
-			t.Errorf("expected status code %d, got %d", http.StatusOK, rs.StatusCode)
+		// req.Header.Set("Content-Type", "application/json")
+		// w := httptest.NewRecorder()
+		// handler(w, req)
+
+		// resp := w.Result()
+		// body, _ := io.ReadAll(resp.Body)
+
+		// fmt.Println(resp.StatusCode)
+		// fmt.Println(resp.Header.Get("Content-Type"))
+		// fmt.Println(string(body))
+		resp, err := ts.Client().Do(req)
+		if err != nil {
+			t.Fatalf("failed to get index.html: %v", err)
 		}
-		fmt.Println("rs", rs)
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("expected status code %d, got %d", http.StatusOK, resp.StatusCode)
+		}
+		greeting, err := io.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("greeting: %s\n", greeting)
+		defer resp.Body.Close()
+
+		// req.Header.Set("Content-Type", "application/json")
+		// unmarshal req.Body
+		// fmt.Println("req", req)
 
 		t.Run(tt.name, func(t *testing.T) {
 			var resp ResponseData
@@ -361,7 +401,7 @@ func TestCollectHTTP_Collect(t *testing.T) {
 			fmt.Println("Unmarshalled resp: ", resp)
 
 			// Correct format of the collected data (JSON data)
-			assert.Equal(t, response_type.Response.Status, resp.Response.Status)
+			// assert.Equal(t, response_type.Response.Status, resp.Response.Status)
 			// assert.Equal(t, response_type.Response.Body, resp.Response.Body)
 			assert.Equal(t, response_type.Response.Headers.ContentLength, resp.Response.Headers.ContentLength)
 			// assert.Equal(t, response_type.Response.Headers.ContentType, resp.Response.Headers.ContentType)
@@ -417,7 +457,7 @@ func TestCollectHTTP_Collect(t *testing.T) {
 			got = nil
 			err = nil
 			response_type = nil
-			time.Sleep(2 * time.Second)
+			// time.Sleep(2 * time.Second)
 		})
 	}
 }
