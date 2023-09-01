@@ -303,6 +303,16 @@ func TestCollectHTTP_Collect(t *testing.T) {
 		url := ts.URL
 		defer ts.Close()
 
+		client := ts.Client()
+		rs, err := client.Get(ts.URL + "/get")
+		if err != nil {
+			t.Fatalf("failed to get index.html: %v", err)
+		}
+		if rs.StatusCode != http.StatusOK {
+			t.Errorf("expected status code %d, got %d", http.StatusOK, rs.StatusCode)
+		}
+		fmt.Println("rs", rs)
+
 		t.Run(tt.name, func(t *testing.T) {
 			var resp ResponseData
 			var response_type *ResponseData
@@ -314,15 +324,15 @@ func TestCollectHTTP_Collect(t *testing.T) {
 			case c.Collector.Get != nil:
 				response_type = sample_get_response
 				c.Collector.Get.URL = fmt.Sprintf("%s%s", url, "/get")
-				fmt.Println(c.Collector.Get)
+				fmt.Println("Requested: ", c.Collector.Get)
 			case c.Collector.Post != nil:
 				response_type = sample_post_response
 				c.Collector.Post.URL = fmt.Sprintf("%s%s", url, "/post")
-				fmt.Println(c.Collector.Post)
+				fmt.Println("Requested: ", c.Collector.Post)
 			case c.Collector.Put != nil:
 				response_type = sample_put_response
 				c.Collector.Put.URL = fmt.Sprintf("%s%s", url, "/put")
-				fmt.Println(c.Collector.Put)
+				fmt.Println("Requested: ", c.Collector.Put)
 			}
 			got, err := c.Collect(tt.args.progressChan)
 			if (err != nil) != tt.wantErr {
@@ -347,8 +357,8 @@ func TestCollectHTTP_Collect(t *testing.T) {
 			for key, value := range got {
 				gotString[key] = string(value)
 			}
-			fmt.Println("got", gotString)
-			fmt.Println("resp", resp)
+			fmt.Println("gotString: ", gotString)
+			fmt.Println("Unmarshalled resp: ", resp)
 
 			// Correct format of the collected data (JSON data)
 			assert.Equal(t, response_type.Response.Status, resp.Response.Status)
@@ -407,7 +417,7 @@ func TestCollectHTTP_Collect(t *testing.T) {
 			got = nil
 			err = nil
 			response_type = nil
-			// time.Sleep(2 * time.Second)
+			time.Sleep(2 * time.Second)
 		})
 	}
 }
